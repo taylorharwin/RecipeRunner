@@ -6,19 +6,13 @@ const isValueOrOperator = /\[(.*?)\]|\-|\*|\+|\/|[-.0-9]+/g;
 
 
 function Recipe(recipe){
-	if (!recipe || !recipe.formula){
+	console.log(recipe);
+	if (!recipe || recipe.formula === undefined){
+		console.log('err');
 		throw new Error('requires a recipe with a formula');
 	}
-
 	this.formula = recipe.formula;
-
-	var formulaVars = this.formula.match(isValueOrOperator);
-	console.log(formulaVars);
-
-
-
-
-	
+	this._formulaVars = this.formula.match(isValueOrOperator);
 }
 
 
@@ -26,4 +20,3 @@ function Recipe(recipe){
 module.exports = Recipe;
 
 
-var recipe = new Recipe(mockData);
