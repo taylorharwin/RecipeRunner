@@ -2,10 +2,7 @@ const lodash = require('lodash')
 
 const mockData = require('./mockData');
 
-const isFormulaVariable = new RegExp(/\[(.*?)\]/);
-const isOperator = new RegExp(/\-|\*|\+|\//);
-const isValue = new RegExp(/[-.0-9]/);
-const isPartOfFormula = new RegExp(isFormulaVariable.source + "|" + isOperator.source + "|" + isValue.source);
+const isValueOrOperator = /\[(.*?)\]|\-|\*|\+|\/|[-.0-9]+/g;
 
 
 function Recipe(recipe){
@@ -15,7 +12,7 @@ function Recipe(recipe){
 
 	this.formula = recipe.formula;
 
-	var formulaVars = this.formula.match(isPartOfFormula);
+	var formulaVars = this.formula.match(isValueOrOperator);
 	console.log(formulaVars);
 
 
