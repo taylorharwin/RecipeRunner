@@ -1,0 +1,28 @@
+{
+  "name": "recipe_runner",
+  "version": "0.1.0",
+  "description": "Runs calculations for formatted JSON",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/taylorharwin/RecipeRunner.git"
+  },
+  "keywords": [
+    "recipe"
+  ],
+  "author": "Taylor Harwin <taylor.harwin@gmail.com> (www.taylorharwin.com)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/taylorharwin/RecipeRunner/issues"
+  },
+  "homepage": "https://github.com/taylorharwin/RecipeRunner#readme",
+  "dependencies": {
+    "lodash": "^4.11.2"
+  },
+  "devDependencies": {
+    "jest-cli": "^12.0.2"
+  }
+}
