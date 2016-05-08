@@ -1,22 +1,30 @@
-const lodash = require('lodash')
+const _ = require('lodash')
 
 const mockData = require('./mockData');
 
-const isValueOrOperator = /\[(.*?)\]|\-|\*|\+|\/|[-.0-9]+/g;
+const isIngredientOrOperator = /\[(.*?)\]|\-|\*|\+|\/|[-.0-9]+/g;
 
 
 function Recipe(recipe){
-	console.log(recipe);
 	if (!recipe || recipe.formula === undefined){
-		console.log('err');
 		throw new Error('requires a recipe with a formula');
 	}
+
 	this.formula = recipe.formula;
-	this._formulaVars = this.formula.match(isValueOrOperator);
+	var formulaArray = this.formula.match(isIngredientOrOperator);
+
+	this.formulaForCalculation = _.map(formulaArray, function extractBracketedValues(formulaVar){
+		if (formulaVar[0] === '['){
+			formulaVar = formulaVar.slice(1, -1);
+		}
+		return formulaVar;
+	});
+
+
+	
 }
 
 
 
 module.exports = Recipe;
-
 
