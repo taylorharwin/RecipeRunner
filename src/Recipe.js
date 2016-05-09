@@ -1,9 +1,7 @@
 const _ = require('lodash');
 
 const mockData = require('./mockData');
-
 const isIngredientOrOperator = /\[(.*?)\]|\-|\*|\+|\/|[0-9]+/g;
-
 const supportedOperators = {
 	'+': 1,
 	'-': 1,
@@ -11,42 +9,41 @@ const supportedOperators = {
 	'/': 2
 }
 
+
 function Recipe(recipe){
 	if (!recipe || recipe.formula === undefined){
 		throw new Error('requires a recipe with a formula');
 	}
-
 	this.formula = recipe.formula;
 	this.ingredients = recipe.ingredients;
 
-	this.infixFormula = this.extractFormulaValues(this.formula, this.ingredients);
+	this.infixFormula = this.replaceFormulaElements(this.formula, this.ingredients);
 	this.postfixFormula = this.infixToPostFix(this.infixFormula);
 }
 
-Recipe.prototype.extractFormulaValues = function(formula, ingredients){
+Recipe.prototype.formatStep = function(step){
+	if (step[0] === '['){
+		step = step. slice(1, -1);
+		return {
+			ingredientName: step,
+			ingredientIndex: _.findIndex(this.ingredients, {name: step})
+		};
+	}
+	if (supportedOperators[step]){
+		return {
+			action: step
+		};
+	}
+	if (_.isNumber(parseInt(step, 10))){
+		return {
+			number: parseInt(step, 10)
+		};
+	}
+}
+
+Recipe.prototype.replaceFormulaElements = function(formula){
 	formula = formula.match(isIngredientOrOperator);
-
-
-	return _.map(formula, function extractValue(formulaValue){
-		if (formulaValue[0] === '['){
-			formulaValue = formulaValue.slice(1, -1);
-			var ingredientIndex = _.findIndex(ingredients, {name: formulaValue});
-			return {
-				ingredientName: formulaValue,
-				ingredientIndex: ingredientIndex
-			}
-		}
-		if (supportedOperators[formulaValue]){
-			return {
-				action: formulaValue,
-			}
-		}
-		if (_.isNumber(parseInt(formulaValue, 10))){
-			return {
-				number: parseInt(formulaValue, 10)
-			}
-		}
-	});
+	return _.map(formula, this.formatStep.bind(this))
 }
 
 Recipe.prototype.getIngredientValue = function(ingredient, date){
@@ -54,9 +51,9 @@ Recipe.prototype.getIngredientValue = function(ingredient, date){
 	return ingredientReportedData[date];
 }
 
-
 Recipe.prototype.infixToPostFix = function(infixFormula){
 	var operatorStack = [];
+
 	function lastActionInStack(){
 		return _.get(_.last(operatorStack), 'action');
 	}
@@ -77,13 +74,40 @@ Recipe.prototype.infixToPostFix = function(infixFormula){
 			return output;
 		}, []).concat(_.reverse(operatorStack));
 }
-
-Recipe.prototype.value_for = function(date){
-
+Recipe.prototype.evaluate = function(val1, val2, action){
+	if (action === '+'){
+		return (val2 + val1)
+	} else if (action === '-'){
+		return (val2 - val1)
+	} else if (action === '*'){
+		return (val2 * val1)
+	} else if (action === '/'){
+		return (val2 / val1)
+	}
 }
+Recipe.prototype.value_for = function(date){
+	var stack = [],
+	boundProcessStep = _.bind(function(step){
+		if (step.number){
+			stack.push(step.number);
+		} else if (step.ingredientName){
+			stack.push(this.getIngredientValue(step, date));
+		} else if (step.action){
+			var op1 = stack.pop();
+			var op2 = stack.pop();
+			var result = this.evaluate(op1, op2, step.action);
+			stack.push(result);
+		}
+	}, this);
 
+	_.each(this.postfixFormula, boundProcessStep);
 
-
+	if (stack.length > 1){
+		throw new Error('there was an error processing the formula');
+	} else {
+		return parseFloat(stack.pop().toFixed(2), 10);;
+	}
+}
 
 module.exports = Recipe;
 

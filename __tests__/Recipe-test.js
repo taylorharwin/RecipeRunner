@@ -12,7 +12,7 @@ describe('the recipe runner', function(){
 					formula: recipe.formula,
 					ingredients: recipe.ingredients
 				});
-				return rec.extractFormulaValues(rec.formula, rec.ingredients)
+				return rec.replaceFormulaElements(rec.formula, rec.ingredients)
 			}
 	})
 	it('requires at least a recipe as an input', function(){
@@ -135,6 +135,19 @@ describe('the recipe runner', function(){
 		it ('reports undefined if no value is available', function(){
 			expect(rec.getIngredientValue(ingredients[0],'1999-12-31')).toBeUndefined();
 			expect(rec.getIngredientValue(ingredients[1],'1204-2-4')).toBeUndefined();
+		});
+	});
+	describe('when running a formula for a given date', function(){
+		var rec,
+			ingredients;
+		beforeEach(function(){
+ 			rec = new Recipe(mockData);
+		});
+
+		it ('computes values according to the recipe', function(){
+			var expected = parseFloat((14257.34 - 9349.45).toFixed(2));
+			expect(rec.value_for('2015-02-28')).toEqual(expected);
+
 		});
 	});
 
