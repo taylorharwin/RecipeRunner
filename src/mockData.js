@@ -1,7 +1,7 @@
 var mockData = {
   "type": "recipe",
   "name": "Net Profit",
-  "formula": "[Monthly Recurring Revenue] - [Monthly Expenses]",
+  "formula": "[Monthly Recurring Revenue] - [Monthly Expenses] * 63",
   "ingredients": [
     {
       "type": "ingredient",
