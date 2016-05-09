@@ -1,13 +1,11 @@
-const _ = require('lodash');
-
-const mockData = require('./mockData');
-const isIngredientOrOperator = /\[(.*?)\]|\-|\*|\+|\/|[0-9]+/g;
-const supportedOperators = {
+var _ = require('lodash');
+var isIngredientOrOperator = /\[(.*?)\]|\-|\*|\+|\/|[0-9]+/g;
+var supportedOperators = {
 	'+': 1,
 	'-': 1,
 	'*': 2,
 	'/': 2
-}
+};
 
 function Recipe(recipe){
 	if (!recipe || recipe.formula === undefined){
@@ -15,10 +13,14 @@ function Recipe(recipe){
 	}
 	this.formula = recipe.formula;
 	this.ingredients = recipe.ingredients;
-
-	this.infixFormula = this.replaceFormulaElements(this.formula, this.ingredients);
+	this.infixFormula = this.replaceFormulaElements(this.formula);
 	this.postfixFormula = this.infixToPostFix(this.infixFormula);
 }
+
+Recipe.prototype.replaceFormulaElements = function(formulaSteps){
+	formulaSteps = formulaSteps.match(isIngredientOrOperator);
+	return _.map(formulaSteps, this.formatStep.bind(this));
+};
 
 Recipe.prototype.formatStep = function(step){
 	if (step[0] === '['){
@@ -27,28 +29,21 @@ Recipe.prototype.formatStep = function(step){
 			ingredientName: step,
 			ingredientIndex: _.findIndex(this.ingredients, {name: step})
 		};
-	}
-	if (supportedOperators[step]){
+	} if (supportedOperators[step]){
 		return {
 			action: step
 		};
-	}
-	if (_.isNumber(parseInt(step, 10))){
+	} if (_.isNumber(parseInt(step, 10))){
 		return {
 			number: parseInt(step, 10)
 		};
 	}
-}
-
-Recipe.prototype.replaceFormulaElements = function(formula){
-	formula = formula.match(isIngredientOrOperator);
-	return _.map(formula, this.formatStep.bind(this))
-}
+};
 
 Recipe.prototype.getIngredientValue = function(ingredient, date){
 	var ingredientReportedData = this.ingredients[ingredient.ingredientIndex].reported_data;
 	return ingredientReportedData[date];
-}
+};
 
 Recipe.prototype.infixToPostFix = function(infixFormula){
 	var operatorStack = [];
@@ -58,7 +53,7 @@ Recipe.prototype.infixToPostFix = function(infixFormula){
 	}
 		return _.reduce(infixFormula, function(output, step){
 			if (step.number || step.ingredientName){
-				output.push(step)
+				output.push(step);
 			}
 			if (step.action){
 				if (_.isEmpty(operatorStack)){
@@ -72,31 +67,27 @@ Recipe.prototype.infixToPostFix = function(infixFormula){
 		}
 			return output;
 		}, []).concat(_.reverse(operatorStack));
-}
+};
+
 Recipe.prototype.evaluate = function(val1, val2, action){
 	if (val1 === undefined || val2 === undefined){
 		return undefined;
-	}
-	if (_.isNull(val1) || _.isNull(val2)){
+	} if (_.isNull(val1) || _.isNull(val2)){
 		return null;
-	}
-	if (action === '+'){
-		return (val2 + val1)
-	}
-	if (action === '-'){
-		return (val2 - val1)
-	} 
-	if (action === '*'){
-		return (val2 * val1)
-	} 
-	if (action === '/'){
+	} if (action === '+'){
+		return (val2 + val1);
+	} if (action === '-'){
+		return (val2 - val1);
+	} if (action === '*'){
+		return (val2 * val1);
+	}  if (action === '/'){
 		if (val1 === 0){
-			throw new Error('attempted to divide by zero')
+			throw new Error('attempted to divide by zero');
 		} else {
-			return (val2 / val1)
+			return (val2 / val1);
 		}
 	}
-}
+};
 Recipe.prototype.value_for = function(date){
 	var stack = [],
 	boundProcessStep = _.bind(function(step){
@@ -123,10 +114,7 @@ Recipe.prototype.value_for = function(date){
 		}
 		return last;
 	}
-}
-
-var r = new Recipe(mockData);
-console.log(r.value_for('2015-02-28'))
+};
 
 module.exports = Recipe;
 

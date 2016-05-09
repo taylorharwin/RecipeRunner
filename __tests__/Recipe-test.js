@@ -1,8 +1,8 @@
 jest.disableAutomock();
 
-const Recipe = require('../src/Recipe.js');
-const mockData = require('./mockData.js');
-const _ = require('lodash');
+var Recipe = require('../src/Recipe.js');
+var mockData = require('./mockData.js');
+var _ = require('lodash');
 
 describe('the recipe runner', function(){
 	var getFormulaForCalculation;
