@@ -100,8 +100,6 @@ describe('the recipe runner', function(){
 				{action: '+'}
 				]
 				);
-			
-			
 			expect(Recipe.prototype.infixToPostFix(dividing)).toEqual([
 				{ingredientIndex: 0, ingredientName: 'cat'},
 				{ingredientIndex: 2, ingredientName: 'dog'},
@@ -147,8 +145,16 @@ describe('the recipe runner', function(){
 		it ('computes values according to the recipe', function(){
 			var expected = parseFloat((14257.34 - 9349.45).toFixed(2));
 			expect(rec.value_for('2015-02-28')).toEqual(expected);
-
 		});
+		it ('returns null if a value is not present', function(){
+			expect(rec.value_for('2014-11-30')).toEqual(null);
+			expect(rec.value_for('2014-12-31')).toEqual(null);
+		});
+		it ('returns undefined if a value is not present', function(){
+			expect(rec.value_for('1977-2-3')).toEqual(undefined);
+			expect(rec.value_for('1203-3-2')).toEqual(undefined);
+		});
+
 	});
 
 });

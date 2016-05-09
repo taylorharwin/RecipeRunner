@@ -9,7 +9,6 @@ const supportedOperators = {
 	'/': 2
 }
 
-
 function Recipe(recipe){
 	if (!recipe || recipe.formula === undefined){
 		throw new Error('requires a recipe with a formula');
@@ -75,14 +74,27 @@ Recipe.prototype.infixToPostFix = function(infixFormula){
 		}, []).concat(_.reverse(operatorStack));
 }
 Recipe.prototype.evaluate = function(val1, val2, action){
+	if (val1 === undefined || val2 === undefined){
+		return undefined;
+	}
+	if (_.isNull(val1) || _.isNull(val2)){
+		return null;
+	}
 	if (action === '+'){
 		return (val2 + val1)
-	} else if (action === '-'){
+	}
+	if (action === '-'){
 		return (val2 - val1)
-	} else if (action === '*'){
+	} 
+	if (action === '*'){
 		return (val2 * val1)
-	} else if (action === '/'){
-		return (val2 / val1)
+	} 
+	if (action === '/'){
+		if (val1 === 0){
+			throw new Error('attempted to divide by zero')
+		} else {
+			return (val2 / val1)
+		}
 	}
 }
 Recipe.prototype.value_for = function(date){
@@ -105,9 +117,16 @@ Recipe.prototype.value_for = function(date){
 	if (stack.length > 1){
 		throw new Error('there was an error processing the formula');
 	} else {
-		return parseFloat(stack.pop().toFixed(2), 10);;
+		var last = stack.pop();
+		if (_.isNumber(last)){
+			return Math.round(last * 1e2) / 1e2;
+		}
+		return last;
 	}
 }
+
+var r = new Recipe(mockData);
+console.log(r.value_for('2015-02-28'))
 
 module.exports = Recipe;
 
