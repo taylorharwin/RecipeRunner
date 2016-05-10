@@ -20,8 +20,6 @@ function Recipe(recipe){
 	this.ingredients = recipe.ingredients;
 	this.infixFormula = this.replaceFormulaElements(this.formula);
 	this.postfixFormula = this.infixToPostFix(this.infixFormula);
-		console.log(this.postfixFormula);
-
 }
 
 Recipe.prototype.replaceFormulaElements = function(formulaSteps){

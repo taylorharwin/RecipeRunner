@@ -191,7 +191,7 @@ describe('the recipe runner', function(){
 			expect(rec.value_for()).toEqual(expected1);
 			expect(rec2.value_for()).toEqual(expected2);
 			expect(rec3.value_for()).toEqual(expected3);
-			// expect(rec4.value_for()).toEqual('');
+			// expect(rec4).toEqual('');
 
 		});
 	
