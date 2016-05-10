@@ -12,19 +12,19 @@ describe('the recipe runner', function(){
 					formula: recipe.formula,
 					ingredients: recipe.ingredients
 				});
-				return rec.replaceFormulaElements(rec.formula, rec.ingredients)
-			}
-	})
+				return rec.replaceFormulaElements(rec.formula, rec.ingredients);
+			};
+	});
 	it('requires at least a recipe as an input', function(){
-		expect(function(){new Recipe()}).toThrow();
-		expect(function(){new Recipe({formula: undefined})}).toThrow();
+		expect(function(){new Recipe();}).toThrow();
+		expect(function(){new Recipe({formula: undefined});}).toThrow();
 	});
 
 	describe('when converting a formula string to an array of steps', function(){
 		var ingredients;
 
 		beforeEach(function(){
-			ingredients = [{name: 'a'},{name: 'b'},{name: 'c'},{name: 'd'},{name: 'e'}]
+			ingredients = [{name: 'a'},{name: 'b'},{name: 'c'},{name: 'd'},{name: 'e'}];
 		});
 
 		it('stores references to the variables that are ingredients', function(){
@@ -41,10 +41,10 @@ describe('the recipe runner', function(){
 			expect(formulaVars[2]).toEqual({number: 10000000000});
 			expect(formulaVars[4]).toEqual({number: 33});
 			expect(formulaVars[6]).toEqual({number: 0});
-		})
+		});
 
 		it('matches mathematical operators', function(){
-			formulaVars = getFormulaForCalculation({
+			var formulaVars = getFormulaForCalculation({
 				formula:'[a]+[b] * [c] /[d]- [e]',
 				ingredients: ingredients
 				});
@@ -52,6 +52,19 @@ describe('the recipe runner', function(){
 			expect(formulaVars[3]).toEqual({action: '*'});
 			expect(formulaVars[5]).toEqual({action: '/'});
 			expect(formulaVars[7]).toEqual({action: '-'});
+		});
+
+		it('matches parentheses', function(){
+			var formulaVars = getFormulaForCalculation({
+				formula:'((1+2)/3)+([c]-[d])',
+				ingredients: ingredients
+				});
+			expect(formulaVars[0]).toEqual({grouper: '('});
+			expect(formulaVars[1]).toEqual({grouper: '('});
+			expect(formulaVars[5]).toEqual({grouper: ')'});
+			expect(formulaVars[8]).toEqual({grouper: ')'});
+			expect(formulaVars[10]).toEqual({grouper: '('});
+			expect(formulaVars[14]).toEqual({grouper: ')'});
 		});
 
 		it('excludes unsupported operators', function(){
@@ -117,11 +130,11 @@ describe('the recipe runner', function(){
 		beforeEach(function(){
  			rec = new Recipe(mockData);
 			ingredients = _.filter(rec.infixFormula, function(step){
-				return step.ingredientName
+				return step.ingredientName;
 			});
 		});
 
-		it ('reports the value at that date for each ingredient if one exists', function(){
+		it ('reports the value at that date for the ingredient if one exists', function(){
 			expect(rec.getIngredientValue(ingredients[0],'2015-02-28')).toBe(14257.34);
 			expect(rec.getIngredientValue(ingredients[1],'2015-02-28')).toBe(9349.45);
 		});
@@ -136,17 +149,21 @@ describe('the recipe runner', function(){
 		});
 	});
 	describe('when running a formula for a given date', function(){
-		var rec,
-			ingredients;
+		var rec1;
+		var rec2;
 		beforeEach(function(){
  			rec = new Recipe(mockData);
+ 			rec2 = new Recipe({formula: '1 + 1 / 2 + 2'});
 		});
 
 		it ('computes values according to the recipe', function(){
 			var expected = parseFloat((14257.34 - 9349.45).toFixed(2));
 			expect(rec.value_for('2015-02-28')).toEqual(expected);
 		});
-		it ('returns null if a value is not present', function(){
+		it('computes values when no ingredients are variables', function(){
+			expect(rec2.value_for()).toEqual(1 + (1/2) + 2);
+		});
+		it ('returns null if a value is not present in ingredients', function(){
 			expect(rec.value_for('2014-11-30')).toEqual(null);
 			expect(rec.value_for('2014-12-31')).toEqual(null);
 		});
@@ -154,7 +171,30 @@ describe('the recipe runner', function(){
 			expect(rec.value_for('1977-2-3')).toEqual(undefined);
 			expect(rec.value_for('1203-3-2')).toEqual(undefined);
 		});
+	});
+	describe('when running a formula with parenteses', function(){
+		var rec,
+			rec2,
+			rec3,
+			rec4;
+			beforeEach(function(){
+ 			rec = new Recipe({formula: '(1 + 1)/(2 + 2)'});
+ 			rec2 = new Recipe({formula: '((1 / 4) * 4) + (1 - (1 / (1 / 3)))'});
+ 			rec3 = new Recipe({formula: '100 / 100 / (100 / (1/100)'});
+ 			// rec4 = new Recipe({formula: '(1 + 2))'});
+		});
 
+		it ('computes values according to the recipe', function(){
+			var expected1 = (1 + 1)/(2 + 2);
+			var expected2 = ((1 / 4) * 4) + (1 - (1 / (1 / 3)));
+			var expected3 = Math.round((100 / 100 / (100 / (1/100)) * 1e2) / 1e2);
+			expect(rec.value_for()).toEqual(expected1);
+			expect(rec2.value_for()).toEqual(expected2);
+			expect(rec3.value_for()).toEqual(expected3);
+			// expect(rec4.value_for()).toEqual('');
+
+		});
+	
 	});
 
 });

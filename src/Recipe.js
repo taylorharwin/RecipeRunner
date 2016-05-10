@@ -1,10 +1,15 @@
 var _ = require('lodash');
-var isIngredientOrOperator = /\[(.*?)\]|\-|\*|\+|\/|[0-9]+/g;
+var isIngredientOrOperator = /\[(.*?)\]|\-|\*|\+|\/|[0-9]+|\(|\)/g;
 var supportedOperators = {
 	'+': 1,
 	'-': 1,
 	'*': 2,
-	'/': 2
+	'/': 2,
+};
+
+var supportedGroupers = {
+	'(': '(',
+	')': ')'
 };
 
 function Recipe(recipe){
@@ -15,6 +20,8 @@ function Recipe(recipe){
 	this.ingredients = recipe.ingredients;
 	this.infixFormula = this.replaceFormulaElements(this.formula);
 	this.postfixFormula = this.infixToPostFix(this.infixFormula);
+		console.log(this.postfixFormula);
+
 }
 
 Recipe.prototype.replaceFormulaElements = function(formulaSteps){
@@ -33,6 +40,10 @@ Recipe.prototype.formatStep = function(step){
 		return {
 			action: step
 		};
+	} if (supportedGroupers[step]){
+		return {
+			grouper: step
+		};
 	} if (_.isNumber(parseInt(step, 10))){
 		return {
 			number: parseInt(step, 10)
@@ -48,23 +59,31 @@ Recipe.prototype.getIngredientValue = function(ingredient, date){
 Recipe.prototype.infixToPostFix = function(infixFormula){
 	var operatorStack = [];
 
-	function lastActionInStack(){
-		return _.get(_.last(operatorStack), 'action');
+	function lastInStack(property){
+		return _.get(_.last(operatorStack), property);
 	}
 		return _.reduce(infixFormula, function(output, step){
 			if (step.number || step.ingredientName){
 				output.push(step);
-			}
-			if (step.action){
+			} else if (step.action){
 				if (_.isEmpty(operatorStack)){
 					operatorStack.push(step);
 				} else {
-					while (supportedOperators[lastActionInStack()] && (supportedOperators[lastActionInStack()] >= supportedOperators[step.action])){
+					while (supportedOperators[lastInStack('action')] && (supportedOperators[lastInStack('action')] >= supportedOperators[step.action])){
 						output.push(operatorStack.pop());
 					}
 				operatorStack.push(step);	
+				} 
+			} else if (step.grouper){
+				if (step.grouper === supportedGroupers['(']){
+					operatorStack.push(step);
+				} else if (step.grouper === supportedGroupers[')']){
+					while(lastInStack('grouper') !== supportedGroupers['(']){
+						output.push(operatorStack.pop());
+					}
+					operatorStack.pop();
+				}
 			}
-		}
 			return output;
 		}, []).concat(_.reverse(operatorStack));
 };
@@ -115,6 +134,8 @@ Recipe.prototype.value_for = function(date){
 		return last;
 	}
 };
+
+
 
 module.exports = Recipe;
 
