@@ -1,12 +1,31 @@
 var _ = require('lodash');
 var isIngredientOrOperator = /\[(.*?)\]|\-|\*|\+|\/|[0-9]+|\(|\)/g;
 var supportedOperators = {
-	'+': 1,
-	'-': 1,
-	'*': 2,
-	'/': 2,
+	'+': {
+		weight: 1, 
+		operate: function(num1, num2){
+			return num1 + num2;
+		}
+	},
+	'-': {
+		weight: 1, 
+		operate: function(num1, num2){
+			return num2 - num1;
+		}
+	},
+	'*': {
+		weight: 2, 
+		operate: function(num1, num2){
+			return num1 * num2;
+		}
+	},
+	'/': {
+		weight: 2, 
+		operate: function(num1, num2){
+			return num2 / num1;
+		}
+	}
 };
-
 var supportedGroupers = {
 	'(': '(',
 	')': ')'
@@ -28,8 +47,8 @@ Recipe.prototype.replaceFormulaElements = function(formulaSteps){
 };
 
 Recipe.prototype.formatStep = function(step){
-	if (step[0] === '['){
-		step = step. slice(1, -1);
+	if (_.first(step) === '['){
+		step = step.slice(1, -1);
 		return {
 			ingredientName: step,
 			ingredientIndex: _.findIndex(this.ingredients, {name: step})
@@ -51,7 +70,9 @@ Recipe.prototype.formatStep = function(step){
 
 Recipe.prototype.getIngredientValue = function(ingredient, date){
 	var ingredientReportedData = this.ingredients[ingredient.ingredientIndex].reported_data;
-	return ingredientReportedData[date];
+	if (_.has(ingredientReportedData, date)){
+			return ingredientReportedData[date];
+	} 
 };
 
 Recipe.prototype.infixToPostFix = function(infixFormula){
@@ -60,14 +81,14 @@ Recipe.prototype.infixToPostFix = function(infixFormula){
 	function lastInStack(property){
 		return _.get(_.last(operatorStack), property);
 	}
-		return _.reduce(infixFormula, function(output, step){
+		var infixOutput = _.reduce(infixFormula, function(output, step){
 			if (step.number || step.ingredientName){
 				output.push(step);
 			} else if (step.action){
 				if (_.isEmpty(operatorStack)){
 					operatorStack.push(step);
 				} else {
-					while (supportedOperators[lastInStack('action')] && (supportedOperators[lastInStack('action')] >= supportedOperators[step.action])){
+					while (supportedOperators[lastInStack('action')] && (supportedOperators[lastInStack('action')].weight >= supportedOperators[step.action].weight)){
 						output.push(operatorStack.pop());
 					}
 				operatorStack.push(step);	
@@ -76,34 +97,39 @@ Recipe.prototype.infixToPostFix = function(infixFormula){
 				if (step.grouper === supportedGroupers['(']){
 					operatorStack.push(step);
 				} else if (step.grouper === supportedGroupers[')']){
-					while(lastInStack('grouper') !== supportedGroupers['(']){
-						output.push(operatorStack.pop());
+					var foundLeftParen = false;
+					while (!foundLeftParen && !_.isEmpty(operatorStack)){
+						if (lastInStack('grouper') !== supportedGroupers['(']){
+							output.push(operatorStack.pop());
+						} else {
+							foundLeftParen = true;
+							operatorStack.pop();
+							break;
+						}
 					}
-					operatorStack.pop();
+					if (!foundLeftParen){
+						throw new Error('the parentheses are mismatched in the formula');
+					}
 				}
 			}
+			
 			return output;
-		}, []).concat(_.reverse(operatorStack));
+		}, []);
+		if (_.findLast(operatorStack, function(operator){
+			return _.has(operator, 'grouper');
+		})){
+			throw new Error('the parentheses are mismatched in the formula');
+		}
+		return infixOutput.concat(_.reverse(operatorStack));
 };
 
 Recipe.prototype.evaluate = function(val1, val2, action){
 	if (val1 === undefined || val2 === undefined){
-		return undefined;
+		return;
 	} if (_.isNull(val1) || _.isNull(val2)){
 		return null;
-	} if (action === '+'){
-		return (val2 + val1);
-	} if (action === '-'){
-		return (val2 - val1);
-	} if (action === '*'){
-		return (val2 * val1);
-	}  if (action === '/'){
-		if (val1 === 0){
-			throw new Error('attempted to divide by zero');
-		} else {
-			return (val2 / val1);
-		}
 	}
+	return supportedOperators[action].operate(val1, val2);
 };
 Recipe.prototype.value_for = function(date){
 	var stack = [],
@@ -132,8 +158,6 @@ Recipe.prototype.value_for = function(date){
 		return last;
 	}
 };
-
-
 
 module.exports = Recipe;
 

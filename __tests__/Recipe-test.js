@@ -15,24 +15,30 @@ describe('the recipe runner', function(){
 				return rec.replaceFormulaElements(rec.formula, rec.ingredients);
 			};
 	});
-	it('requires at least a recipe as an input', function(){
+	it('requires at least a formula as an input', function(){
 		expect(function(){new Recipe();}).toThrow();
 		expect(function(){new Recipe({formula: undefined});}).toThrow();
+	});
+	it('errors if the formula has unmatched parentheses ', function(){
+		expect(function(){new Recipe({formula: '(1 + 1))'});}).toThrow();
+		expect(function(){new Recipe({formula: '((1 + 1)'});}).toThrow();
 	});
 
 	describe('when converting a formula string to an array of steps', function(){
 		var ingredients;
-
 		beforeEach(function(){
-			ingredients = [{name: 'a'},{name: 'b'},{name: 'c'},{name: 'd'},{name: 'e'}];
+			ingredients = [
+			{name: 'a'},
+			{name: 'b'},
+			{name: 'c'},
+			{name: 'd'},
+			{name: 'e'}];
 		});
-
 		it('stores references to the variables that are ingredients', function(){
 			var formulaVars = getFormulaForCalculation(mockData);
 			expect(formulaVars[0]).toEqual({ingredientIndex: 0, ingredientName: "Monthly Recurring Revenue"});
 			expect(formulaVars[2]).toEqual({ingredientIndex: 1, ingredientName: "Monthly Expenses"});
 		});
-
 		it('matches number string ingredients and converts them to integers', function(){
 			var formulaVars = getFormulaForCalculation({
 				formula: '1 * 10000000000 + 33 / 0'
@@ -42,7 +48,6 @@ describe('the recipe runner', function(){
 			expect(formulaVars[4]).toEqual({number: 33});
 			expect(formulaVars[6]).toEqual({number: 0});
 		});
-
 		it('matches mathematical operators', function(){
 			var formulaVars = getFormulaForCalculation({
 				formula:'[a]+[b] * [c] /[d]- [e]',
@@ -53,7 +58,6 @@ describe('the recipe runner', function(){
 			expect(formulaVars[5]).toEqual({action: '/'});
 			expect(formulaVars[7]).toEqual({action: '-'});
 		});
-
 		it('matches parentheses', function(){
 			var formulaVars = getFormulaForCalculation({
 				formula:'((1+2)/3)+([c]-[d])',
@@ -66,7 +70,6 @@ describe('the recipe runner', function(){
 			expect(formulaVars[10]).toEqual({grouper: '('});
 			expect(formulaVars[14]).toEqual({grouper: ')'});
 		});
-
 		it('excludes unsupported operators', function(){
 			formulaVars = getFormulaForCalculation({
 				formula: '[a] x [b] dividedBy [c] & [d] % [e]',
@@ -92,7 +95,6 @@ describe('the recipe runner', function(){
 				formula: '[cat] / [dog] / [bird]',
 				ingredients: [{name: 'cat'},{name: 'bird'}, {name: 'dog'}]
 			});
-
 			expect(Recipe.prototype.infixToPostFix(mixed)).toEqual([
 				{number: 1},
 				{number: 2},
@@ -120,9 +122,7 @@ describe('the recipe runner', function(){
 				{ingredientIndex: 1, ingredientName: 'bird'},
 				{action: '/'}
 				]);
-
 		});
-
 	});
 	describe('when getting a formula ingredient value for a given date', function(){
 		var rec,
@@ -133,12 +133,10 @@ describe('the recipe runner', function(){
 				return step.ingredientName;
 			});
 		});
-
 		it ('reports the value at that date for the ingredient if one exists', function(){
 			expect(rec.getIngredientValue(ingredients[0],'2015-02-28')).toBe(14257.34);
 			expect(rec.getIngredientValue(ingredients[1],'2015-02-28')).toBe(9349.45);
 		});
-
 		it ('reports null if value is reported value is null', function(){
 			expect(rec.getIngredientValue(ingredients[0],'2014-12-31')).toBe(null);
 			expect(rec.getIngredientValue(ingredients[1],'2014-11-30')).toBe(null);
@@ -180,10 +178,8 @@ describe('the recipe runner', function(){
 			beforeEach(function(){
  			rec = new Recipe({formula: '(1 + 1)/(2 + 2)'});
  			rec2 = new Recipe({formula: '((1 / 4) * 4) + (1 - (1 / (1 / 3)))'});
- 			rec3 = new Recipe({formula: '100 / 100 / (100 / (1/100)'});
- 			// rec4 = new Recipe({formula: '(1 + 2))'});
+ 			rec3 = new Recipe({formula: '100 / 100 / (100 / (1/100))'});
 		});
-
 		it ('computes values according to the recipe', function(){
 			var expected1 = (1 + 1)/(2 + 2);
 			var expected2 = ((1 / 4) * 4) + (1 - (1 / (1 / 3)));
@@ -191,10 +187,7 @@ describe('the recipe runner', function(){
 			expect(rec.value_for()).toEqual(expected1);
 			expect(rec2.value_for()).toEqual(expected2);
 			expect(rec3.value_for()).toEqual(expected3);
-			// expect(rec4).toEqual('');
 
 		});
-	
 	});
-
 });
