@@ -1,7 +1,8 @@
 jest.disableAutomock();
 
 var Recipe = require('../src/Recipe.js');
-var mockData = require('./mockData.js');
+var mockData1 = require('../example/mockData.js').mockData1;
+var mockData2 = require('../example/mockData.js').mockData2;
 var _ = require('lodash');
 
 describe('the recipe runner', function(){
@@ -35,7 +36,7 @@ describe('the recipe runner', function(){
 			{name: 'e'}];
 		});
 		it('stores references to the variables that are ingredients', function(){
-			var formulaVars = getFormulaForCalculation(mockData);
+			var formulaVars = getFormulaForCalculation(mockData1);
 			expect(formulaVars[0]).toEqual({ingredientIndex: 0, ingredientName: "Monthly Recurring Revenue"});
 			expect(formulaVars[2]).toEqual({ingredientIndex: 1, ingredientName: "Monthly Expenses"});
 		});
@@ -79,10 +80,8 @@ describe('the recipe runner', function(){
 			_.each(formulaVars, function(fv, ind){
 				expect(fv.ingredientName).toEqual(ingredients[ind].name);
 			});
-
 		});
 	});
-
 	describe('when preparing to do math on an array of steps', function(){
 		it('converts infix input to postfix output', function(){
 			var mixed = getFormulaForCalculation({
@@ -106,7 +105,7 @@ describe('the recipe runner', function(){
 				{number: 5},
 				{action: '+'}
 				]
-			)
+			);
 			expect(Recipe.prototype.infixToPostFix(adding)).toEqual([
 				{number: 1},
 				{number: 1},
@@ -114,21 +113,22 @@ describe('the recipe runner', function(){
 				{number: 1},
 				{action: '+'}
 				]
-				);
+			);
 			expect(Recipe.prototype.infixToPostFix(dividing)).toEqual([
 				{ingredientIndex: 0, ingredientName: 'cat'},
 				{ingredientIndex: 2, ingredientName: 'dog'},
 				{action: '/'},
 				{ingredientIndex: 1, ingredientName: 'bird'},
 				{action: '/'}
-				]);
+				]
+			);
 		});
 	});
 	describe('when getting a formula ingredient value for a given date', function(){
 		var rec,
 			ingredients;
 		beforeEach(function(){
- 			rec = new Recipe(mockData);
+ 			rec = new Recipe(mockData1);
 			ingredients = _.filter(rec.infixFormula, function(step){
 				return step.ingredientName;
 			});
@@ -150,7 +150,7 @@ describe('the recipe runner', function(){
 		var rec1;
 		var rec2;
 		beforeEach(function(){
- 			rec = new Recipe(mockData);
+ 			rec = new Recipe(mockData1);
  			rec2 = new Recipe({formula: '1 + 1 / 2 + 2'});
 		});
 
@@ -171,23 +171,27 @@ describe('the recipe runner', function(){
 		});
 	});
 	describe('when running a formula with parenteses', function(){
-		var rec,
+		var rec1,
 			rec2,
 			rec3,
 			rec4;
 			beforeEach(function(){
- 			rec = new Recipe({formula: '(1 + 1)/(2 + 2)'});
+ 			rec1 = new Recipe({formula: '(1 + 1)/(2 + 2)'});
  			rec2 = new Recipe({formula: '((1 / 4) * 4) + (1 - (1 / (1 / 3)))'});
  			rec3 = new Recipe({formula: '100 / 100 / (100 / (1/100))'});
+ 			rec4 = new Recipe(mockData2);
 		});
-		it ('computes values according to the recipe', function(){
+		it ('computes values according to a provided formula with no variables', function(){
 			var expected1 = (1 + 1)/(2 + 2);
 			var expected2 = ((1 / 4) * 4) + (1 - (1 / (1 / 3)));
 			var expected3 = Math.round((100 / 100 / (100 / (1/100)) * 1e2) / 1e2);
-			expect(rec.value_for()).toEqual(expected1);
+			expect(rec1.value_for()).toEqual(expected1);
 			expect(rec2.value_for()).toEqual(expected2);
 			expect(rec3.value_for()).toEqual(expected3);
-
+		});
+		it('computes values according to a formula with variables', function(){
+			expect(rec4.value_for('2015-02-28')).toEqual((50 - 50) / 1);
+			expect(rec4.value_for('2014-08-31')).toEqual((10000 - 2500) / 2);
 		});
 	});
 });
