@@ -149,14 +149,17 @@ describe('the recipe runner', function(){
 	describe('when running a formula for a given date', function(){
 		var rec1;
 		var rec2;
+		var rec3;
 		beforeEach(function(){
  			rec = new Recipe(mockData1);
  			rec2 = new Recipe({formula: '1 + 1 / 2 + 2'});
+ 			rec3 = new Recipe({formula: '100'});
 		});
 
 		it ('computes values according to the recipe', function(){
 			var expected = parseFloat((14257.34 - 9349.45).toFixed(2));
 			expect(rec.value_for('2015-02-28')).toEqual(expected);
+			// expect(rec3.value_for('2016-05-12')).toEqual(100);
 		});
 		it('computes values when no ingredients are variables', function(){
 			expect(rec2.value_for()).toEqual(1 + (1/2) + 2);
@@ -192,6 +195,6 @@ describe('the recipe runner', function(){
 		it('computes values according to a formula with variables', function(){
 			expect(rec4.value_for('2015-02-28')).toEqual((50 - 50) / 1);
 			expect(rec4.value_for('2014-08-31')).toEqual((10000 - 2500) / 2);
-		});
+		})
 	});
 });
