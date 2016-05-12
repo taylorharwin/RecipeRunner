@@ -134,6 +134,7 @@ Recipe.prototype.evaluate = function(val1, val2, action){
 	}
 	return supportedOperators[action].operate(val1, val2);
 };
+
 Recipe.prototype.value_for = function(date){
 	var stack = [],
 	boundProcessStep = _.bind(function(step){
