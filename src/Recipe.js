@@ -69,7 +69,10 @@ Recipe.prototype.formatStep = function(step){
 };
 
 Recipe.prototype.getIngredientValue = function(ingredient, date){
-	var ingredientReportedData = this.ingredients[ingredient.ingredientIndex].reported_data;
+	var ingredientReportedData = _.get(this.ingredients[ingredient.ingredientIndex], 'reported_data');
+	if (_.isUndefined(ingredientReportedData)){
+		throw new Error('there is no ingredient reported data for ' + ingredient);
+	}
 	if (_.has(ingredientReportedData, date)){
 			return ingredientReportedData[date];
 	} 

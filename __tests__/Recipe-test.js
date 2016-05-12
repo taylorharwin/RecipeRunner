@@ -16,7 +16,7 @@ describe('the recipe runner', function(){
 				return rec.replaceFormulaElements(rec.formula, rec.ingredients);
 			};
 	});
-	it('requires at least a formula as an input', function(){
+	it('errors if there is no formula', function(){
 		expect(function(){new Recipe();}).toThrow();
 		expect(function(){new Recipe({formula: undefined});}).toThrow();
 	});
@@ -81,6 +81,14 @@ describe('the recipe runner', function(){
 				expect(fv.ingredientName).toEqual(ingredients[ind].name);
 			});
 		});
+		it('errors if an ingredient is not available when evaluating ', function(){
+			var badFormula = getFormulaForCalculation({
+				formula: '[not an ingredient]',
+				ingredients: ingredients
+			});
+		expect(function(){getFormulaForCalculation(badFormula);}).toThrow();
+	});
+
 	});
 	describe('when preparing to do math on an array of steps', function(){
 		it('converts infix input to postfix output', function(){
@@ -195,6 +203,6 @@ describe('the recipe runner', function(){
 		it('computes values according to a formula with variables', function(){
 			expect(rec4.value_for('2015-02-28')).toEqual((50 - 50) / 1);
 			expect(rec4.value_for('2014-08-31')).toEqual((10000 - 2500) / 2);
-		})
+		});
 	});
 });

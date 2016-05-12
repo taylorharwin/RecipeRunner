@@ -9,10 +9,14 @@ var exampleRecipe = new Recipe(mockData);
 
 //Provide a date as a YYYY-MM-DD string to evaluate the formula for that date
 var result = exampleRecipe.value_for('2015-02-28');  // 4907.89
+console.log('output for exampleRecipe.value_for(2015-02-26): ' + result);
 
 //Returns undefined if no data is provided for any variable in a formula, and null if a null observation was recorded
 var undefinedResult = exampleRecipe.value_for('1028-02-23'); // undefined
-var nullResult = exampleRecipe.value_for('2014-11-30'); // null
+console.log('output for exampleRecipe.value_for(1026-02-20): ' + undefinedResult);
 
-console.log(result, undefinedResult, nullResult);
+var nullResult = exampleRecipe.value_for('2014-11-30'); // null
+console.log('output for exampleRecipe.value_for(2014-11-30): ' + nullResult);
+
+
 
